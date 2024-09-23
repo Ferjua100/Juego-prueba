@@ -78,10 +78,6 @@
             max-width: 100%;
             border-radius: 5px;
         }
-
-        .oculto {
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -98,7 +94,7 @@
         </div>
 
         <!-- Modos de Juego -->
-        <div id="modos-juego" class="seccion oculto">
+        <div id="modos-juego" class="seccion">
             <h2>Modos de Juego</h2>
             <button onclick="iniciarModo('normal')">Modo Normal</button>
             <button onclick="iniciarModo('pokemon')">Modo Pokémon</button>
@@ -107,7 +103,7 @@
         </div>
 
         <!-- Sección del Juego -->
-        <div id="seccion-juego" class="seccion oculto">
+        <div id="seccion-juego" class="seccion">
             <h2 id="titulo-modo"></h2>
             <div id="crucigrama"></div>
             <div id="intentos-restantes"></div>
@@ -115,7 +111,7 @@
         </div>
 
         <!-- Pase de Batalla -->
-        <div id="pase-batalla" class="seccion oculto">
+        <div id="pase-batalla" class="seccion">
             <h2>Pase de Batalla</h2>
             <div id="nivel-pase">Nivel: 1</div>
             <div id="experiencia-pase">Experiencia: 0/100</div>
@@ -123,7 +119,7 @@
         </div>
 
         <!-- Tienda -->
-        <div id="tienda" class="seccion oculto">
+        <div id="tienda" class="seccion">
             <h2>Tienda</h2>
             <div id="monedas">Monedas: 0</div>
             <button onclick="comprarItem('avatar')">Comprar Avatar Aleatorio (100 monedas)</button>
@@ -133,21 +129,21 @@
         </div>
 
         <!-- Logros -->
-        <div id="logros" class="seccion oculto">
+        <div id="logros" class="seccion">
             <h2>Logros</h2>
             <div id="lista-logros"></div>
             <button onclick="volverAlMenu()">Volver al Menú</button>
         </div>
 
         <!-- Misiones -->
-        <div id="misiones" class="seccion oculto">
+        <div id="misiones" class="seccion">
             <h2>Misiones</h2>
             <div id="lista-misiones"></div>
             <button onclick="volverAlMenu()">Volver al Menú</button>
         </div>
 
         <!-- Taquilla -->
-        <div id="taquilla" class="seccion oculto">
+        <div id="taquilla" class="seccion">
             <h2>Taquilla</h2>
             <div>
                 <h3>Avatares</h3>
@@ -222,9 +218,9 @@
         function mostrarSeccion(seccionId) {
             const secciones = document.querySelectorAll('.seccion');
             secciones.forEach(seccion => {
-                seccion.classList.add('oculto');
+                seccion.classList.remove('visible');
             });
-            document.getElementById(seccionId).classList.remove('oculto');
+            document.getElementById(seccionId).classList.add('visible');
         }
 
         function volverAlMenu() {
