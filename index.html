@@ -73,6 +73,7 @@
             border-radius: 5px;
             width: 200px;
             position: relative;
+            text-align: center;
         }
 
         .item img {
@@ -149,7 +150,7 @@
         <!-- Tienda -->
         <div id="tienda" class="seccion">
             <h2>Tienda</h2>
-            <div id="monedas">Monedas: 0</div>
+            <div id="monedas">Monedas: 500</div>
             <div id="pokeballs-display">Pokéballs: 0</div>
             <button onclick="comprarItem('avatar')">Comprar Avatar Aleatorio (100 monedas)</button>
             <button onclick="comprarItem('skin')">Comprar Skin Aleatoria (200 monedas)</button>
@@ -238,6 +239,27 @@
             // Agrega más misiones aquí
         ];
 
+        const imagenesAvatares = [
+            'https://via.placeholder.com/150/FF0000/FFFFFF?text=Avatar+1',
+            'https://via.placeholder.com/150/00FF00/FFFFFF?text=Avatar+2',
+            'https://via.placeholder.com/150/0000FF/FFFFFF?text=Avatar+3',
+            // Agrega más URLs de imágenes de avatares
+        ];
+
+        const imagenesSkins = [
+            'https://via.placeholder.com/150/FFFF00/FFFFFF?text=Skin+1',
+            'https://via.placeholder.com/150/FF00FF/FFFFFF?text=Skin+2',
+            'https://via.placeholder.com/150/00FFFF/FFFFFF?text=Skin+3',
+            // Agrega más URLs de imágenes de skins
+        ];
+
+        const imagenesPokemon = [
+            'https://via.placeholder.com/150/FF0000/FFFFFF?text=Pokemon+1',
+            'https://via.placeholder.com/150/00FF00/FFFFFF?text=Pokemon+2',
+            'https://via.placeholder.com/150/0000FF/FFFFFF?text=Pokemon+3',
+            // Agrega más URLs de imágenes de Pokémon
+        ];
+
         let inventario = {
             avatares: [],
             skins: [],
@@ -323,12 +345,16 @@
                     puntos++;
                     monedas += 10;
                     actualizarMisiones('crucigramasCompletados');
+                    actualizarMonedas();
                 } else if (modoActual === 'pokemon') {
                     pokeballs++;
                     monedas += 15;
                     actualizarMisiones('pokemonCapturados');
+                    actualizarMonedas();
+                    actualizarPokeballs();
                 } else if (modoActual === 'niveles') {
                     monedas += 20;
+                    actualizarMonedas();
                     desbloquearSiguienteNivel();
                     actualizarMisiones('nivelesCompletados');
                     mostrarSeleccionNiveles();
@@ -347,6 +373,7 @@
                         puntos--;
                     } else if (modoActual === 'pokemon') {
                         pokeballs = Math.max(0, pokeballs - 1);
+                        actualizarPokeballs();
                     }
                     intentos = 3;
                     cargarCrucigrama();
@@ -421,12 +448,18 @@
                     if (logro.id === 1 && puntos >= 1) {
                         logro.obtenido = true;
                         alert(`¡Has conseguido el logro: ${logro.nombre}!`);
-                        inventario.avatares.push('Avatar Especial');
+                        inventario.avatares.push({
+                            nombre: 'Avatar Especial',
+                            imagen: 'https://via.placeholder.com/150/FFD700/FFFFFF?text=Avatar+Especial'
+                        });
                     }
                     if (logro.id === 2 && pokeballs >= 10) {
                         logro.obtenido = true;
                         alert(`¡Has conseguido el logro: ${logro.nombre}!`);
-                        inventario.skins.push('Skin Especial');
+                        inventario.skins.push({
+                            nombre: 'Skin Especial',
+                            imagen: 'https://via.placeholder.com/150/FFD700/FFFFFF?text=Skin+Especial'
+                        });
                     }
                     // Agrega más condiciones para otros logros
                 }
@@ -457,8 +490,12 @@
                 costo = 100;
                 if (monedas >= costo) {
                     monedas -= costo;
-                    item = `Avatar ${Math.floor(Math.random() * 100)}`;
-                    alert(`¡Has comprado: ${item}!`);
+                    const indiceAvatar = Math.floor(Math.random() * imagenesAvatares.length);
+                    item = {
+                        nombre: `Avatar ${indiceAvatar + 1}`,
+                        imagen: imagenesAvatares[indiceAvatar]
+                    };
+                    alert(`¡Has comprado: ${item.nombre}!`);
                     inventario.avatares.push(item);
                     actualizarMonedas();
                 } else {
@@ -468,8 +505,12 @@
                 costo = 200;
                 if (monedas >= costo) {
                     monedas -= costo;
-                    item = `Skin ${Math.floor(Math.random() * 100)}`;
-                    alert(`¡Has comprado: ${item}!`);
+                    const indiceSkin = Math.floor(Math.random() * imagenesSkins.length);
+                    item = {
+                        nombre: `Skin ${indiceSkin + 1}`,
+                        imagen: imagenesSkins[indiceSkin]
+                    };
+                    alert(`¡Has comprado: ${item.nombre}!`);
                     inventario.skins.push(item);
                     actualizarMonedas();
                 } else {
@@ -479,8 +520,12 @@
                 costo = 1; // 1 Pokéball
                 if (pokeballs >= costo) {
                     pokeballs -= costo;
-                    item = `Pokémon ${Math.floor(Math.random() * 100)}`;
-                    alert(`¡Has capturado: ${item}!`);
+                    const indicePokemon = Math.floor(Math.random() * imagenesPokemon.length);
+                    item = {
+                        nombre: `Pokémon ${indicePokemon + 1}`,
+                        imagen: imagenesPokemon[indicePokemon]
+                    };
+                    alert(`¡Has capturado: ${item.nombre}!`);
                     inventario.pokemon.push(item);
                     actualizarPokeballs();
                 } else {
@@ -504,7 +549,10 @@
             inventario.avatares.forEach(avatar => {
                 const avatarElemento = document.createElement('div');
                 avatarElemento.classList.add('item');
-                avatarElemento.innerHTML = `<p>${avatar}</p>`;
+                avatarElemento.innerHTML = `
+                    <img src="${avatar.imagen}" alt="${avatar.nombre}">
+                    <p>${avatar.nombre}</p>
+                `;
                 listaAvatares.appendChild(avatarElemento);
             });
 
@@ -513,7 +561,10 @@
             inventario.skins.forEach(skin => {
                 const skinElemento = document.createElement('div');
                 skinElemento.classList.add('item');
-                skinElemento.innerHTML = `<p>${skin}</p>`;
+                skinElemento.innerHTML = `
+                    <img src="${skin.imagen}" alt="${skin.nombre}">
+                    <p>${skin.nombre}</p>
+                `;
                 listaSkins.appendChild(skinElemento);
             });
 
@@ -522,7 +573,10 @@
             inventario.pokemon.forEach(pokemon => {
                 const pokemonElemento = document.createElement('div');
                 pokemonElemento.classList.add('item');
-                pokemonElemento.innerHTML = `<p>${pokemon}</p>`;
+                pokemonElemento.innerHTML = `
+                    <img src="${pokemon.imagen}" alt="${pokemon.nombre}">
+                    <p>${pokemon.nombre}</p>
+                `;
                 listaPokemon.appendChild(pokemonElemento);
             });
         }
@@ -542,6 +596,8 @@
 
         // Inicializar el juego
         mostrarSeccion('menu-principal');
+        actualizarMonedas();
+        actualizarPokeballs();
     </script>
 </body>
 </html>
