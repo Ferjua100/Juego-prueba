@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Juego de Crucigramas</title>
+    <!-- Estilos CSS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h1, h2, h3 {
+            margin-top: 20px;
+        }
+
+        .seccion {
+            display: none;
+            padding: 20px;
+        }
+
+        .seccion.visible {
+            display: block;
+        }
+
+        button {
+            background-color: #3498db;
+            color: #ecf0f1;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        #crucigrama {
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
+            background-color: #34495e;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        #intentos-restantes {
+            margin: 10px;
+            font-size: 18px;
+        }
+
+        #monedas, #nivel-pase, #experiencia-pase {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        #lista-logros, #lista-misiones, #lista-avatares, #lista-skins, #lista-pokemon {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .item {
+            background-color: #34495e;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            width: 200px;
+        }
+
+        .item img {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+
+        .oculto {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Menú Principal -->
+        <div id="menu-principal" class="seccion visible">
+            <h1>Juego de Crucigramas</h1>
+            <button onclick="mostrarSeccion('modos-juego')">Modos de Juego</button>
+            <button onclick="mostrarSeccion('pase-batalla')">Pase de Batalla</button>
+            <button onclick="mostrarSeccion('tienda')">Tienda</button>
+            <button onclick="mostrarSeccion('logros')">Logros</button>
+            <button onclick="mostrarSeccion('misiones')">Misiones</button>
+            <button onclick="mostrarSeccion('taquilla')">Taquilla</button>
+        </div>
+
+        <!-- Modos de Juego -->
+        <div id="modos-juego" class="seccion oculto">
+            <h2>Modos de Juego</h2>
+            <button onclick="iniciarModo('normal')">Modo Normal</button>
+            <button onclick="iniciarModo('pokemon')">Modo Pokémon</button>
+            <button onclick="iniciarModo('niveles')">Modo Niveles</button>
+            <button onclick="volverAlMenu()">Volver al Menú</button>
+        </div>
+
+        <!-- Sección del Juego -->
+        <div id="seccion-juego" class="seccion oculto">
+            <h2 id="titulo-modo"></h2>
+            <div id="crucigrama"></div>
+            <div id="intentos-restantes"></div>
+            <button onclick="volverAlMenu()">Volver al Menú</button>
+        </div>
+
+        <!-- Pase de Batalla -->
+        <div id="pase-batalla" class="seccion oculto">
+            <h2>Pase de Batalla</h2>
+            <div id="nivel-pase">Nivel: 1</div>
+            <div id="experiencia-pase">Experiencia: 0/100</div>
+            <button onclick="volverAlMenu()">Volver al Menú</button>
+        </div>
+
+        <!-- Tienda -->
+        <div id="tienda" class="seccion oculto">
+            <h2>Tienda</h2>
+            <div id="monedas">Monedas: 0</div>
+            <button onclick="comprarItem('avatar')">Comprar Avatar Aleatorio (100 monedas)</button>
+            <button onclick="comprarItem('skin')">Comprar Skin Aleatoria (200 monedas)</button>
+            <button onclick="comprarItem('pokemon')">Comprar Pokémon Aleatorio (300 monedas)</button>
+            <button onclick="volverAlMenu()">Volver al Menú</button>
+        </div>
+
+        <!-- Logros -->
+        <div id="logros" class="seccion oculto">
+            <h2>Logros</h2>
+            <div id="lista-logros"></div>
+            <button onclick="volverAlMenu()">Volver al Menú</button>
+        </div>
+
+        <!-- Misiones -->
+        <div id="misiones" class="seccion oculto">
+            <h2>Misiones</h2>
+            <div id="lista-misiones"></div>
+            <button onclick="volverAlMenu()">Volver al Menú</button>
+        </div>
+
+        <!-- Taquilla -->
+        <div id="taquilla" class="seccion oculto">
+            <h2>Taquilla</h2>
+            <div>
+                <h3>Avatares</h3>
+                <div id="lista-avatares"></div>
+            </div>
+            <div>
+                <h3>Skins</h3>
+                <div id="lista-skins"></div>
+            </div>
+            <div>
+                <h3>Pokédex</h3>
+                <div id="lista-pokemon"></div>
+            </div>
+            <button onclick="volverAlMenu()">Volver al Menú</button>
+        </div>
+    </div>
+
+    <!-- Script JavaScript -->
+    <script>
+        // Variables globales
+        let modoActual = '';
+        let intentos = 3;
+        let puntos = 0;
+        let pokeballs = 0;
+        let nivelActual = 1;
+        let monedas = 500;
+        let experienciaPase = 0;
+        let nivelPase = 1;
+
+        // Datos del juego
+        const crucigramas = {
+            normal: [
+                { pregunta: 'Capital de Francia', respuesta: 'paris' },
+                { pregunta: 'Animal que dice "miau"', respuesta: 'gato' },
+                // Agrega más crucigramas aquí
+            ],
+            pokemon: [
+                { pregunta: 'Pokémon eléctrico amarillo', respuesta: 'pikachu' },
+                { pregunta: 'Pokémon inicial de agua en Kanto', respuesta: 'squirtle' },
+                // Agrega más crucigramas aquí
+            ],
+            niveles: [
+                { nivel: 1, pregunta: 'Color del cielo', respuesta: 'azul' },
+                { nivel: 2, pregunta: 'Opuesto de frío', respuesta: 'calor' },
+                // Agrega más niveles aquí
+            ],
+        };
+
+        const logros = [
+            { id: 1, nombre: 'Primer Éxito', descripcion: 'Completa tu primer crucigrama', obtenido: false },
+            { id: 2, nombre: 'Maestro Pokémon', descripcion: 'Consigue 10 pokéballs', obtenido: false },
+            // Agrega más logros aquí
+        ];
+
+        const misionesDiarias = [
+            { id: 1, nombre: 'Completa 3 crucigramas', progreso: 0, objetivo: 3, recompensa: 50, tipo: 'diaria', completada: false },
+            // Agrega más misiones aquí
+        ];
+
+        const misionesSemanales = [
+            { id: 2, nombre: 'Gana 5 partidas en modo niveles', progreso: 0, objetivo: 5, recompensa: 200, tipo: 'semanal', completada: false },
+            // Agrega más misiones aquí
+        ];
+
+        let inventario = {
+            avatares: [],
+            skins: [],
+            pokemon: [],
+        };
+
+        // Funciones de navegación
+        function mostrarSeccion(seccionId) {
+            const secciones = document.querySelectorAll('.seccion');
+            secciones.forEach(seccion => {
+                seccion.classList.add('oculto');
+            });
+            document.getElementById(seccionId).classList.remove('oculto');
+        }
+
+        function volverAlMenu() {
+            mostrarSeccion('menu-principal');
+        }
+
+        // Funciones del juego
+        function iniciarModo(modo) {
+            modoActual = modo;
+            intentos = 3;
+            document.getElementById('titulo-modo').innerText = `Modo ${modo.charAt(0).toUpperCase() + modo.slice(1)}`;
+            mostrarSeccion('seccion-juego');
+            cargarCrucigrama();
+        }
+
+        function cargarCrucigrama() {
+            let crucigramaActual;
+            if (modoActual === 'normal' || modoActual === 'pokemon') {
+                const crucigramasModo = crucigramas[modoActual];
+                crucigramaActual = crucigramasModo[Math.floor(Math.random() * crucigramasModo.length)];
+            } else if (modoActual === 'niveles') {
+                crucigramaActual = crucigramas.niveles.find(n => n.nivel === nivelActual);
+                if (!crucigramaActual) {
+                    alert('¡Has completado todos los niveles disponibles!');
+                    volverAlMenu();
+                    return;
+                }
+            }
+
+            document.getElementById('crucigrama').innerHTML = `
+                <p>${crucigramaActual.pregunta}</p>
+                <input type="text" id="respuesta" placeholder="Tu respuesta">
+                <button onclick="verificarRespuesta('${crucigramaActual.respuesta.toLowerCase()}')">Enviar</button>
+            `;
+            actualizarIntentos();
+        }
+
+        function verificarRespuesta(respuestaCorrecta) {
+            const respuesta = document.getElementById('respuesta').value.toLowerCase();
+            if (respuesta === respuestaCorrecta) {
+                alert('¡Correcto!');
+                if (modoActual === 'normal') {
+                    puntos++;
+                    monedas += 10;
+                    actualizarMisiones('crucigramasCompletados');
+                } else if (modoActual === 'pokemon') {
+                    pokeballs++;
+                    monedas += 15;
+                    actualizarMisiones('pokemonCapturados');
+                } else if (modoActual === 'niveles') {
+                    nivelActual++;
+                    monedas += 20;
+                    actualizarMisiones('nivelesCompletados');
+                }
+                verificarLogros();
+                cargarCrucigrama();
+            } else {
+                intentos--;
+                if (intentos > 0) {
+                    alert(`Incorrecto. Te quedan ${intentos} intentos.`);
+                    actualizarIntentos();
+                } else {
+                    alert('Has fallado los tres intentos.');
+                    if (modoActual === 'normal') {
+                        puntos--;
+                    } else if (modoActual === 'pokemon') {
+                        pokeballs = Math.max(0, pokeballs - 1);
+                    }
+                    intentos = 3;
+                    cargarCrucigrama();
+                }
+            }
+        }
+
+        function actualizarIntentos() {
+            document.getElementById('intentos-restantes').innerText = `Intentos restantes: ${intentos}`;
+        }
+
+        // Funciones del Pase de Batalla
+        function actualizarExperiencia(cantidad) {
+            experienciaPase += cantidad;
+            if (experienciaPase >= 100) {
+                experienciaPase -= 100;
+                nivelPase++;
+                alert('¡Has subido de nivel en el Pase de Batalla!');
+            }
+            document.getElementById('experiencia-pase').innerText = `Experiencia: ${experienciaPase}/100`;
+            document.getElementById('nivel-pase').innerText = `Nivel: ${nivelPase}`;
+        }
+
+        // Funciones de Misiones
+        function cargarMisiones() {
+            const listaMisiones = document.getElementById('lista-misiones');
+            listaMisiones.innerHTML = '';
+
+            const misiones = [...misionesDiarias, ...misionesSemanales];
+
+            misiones.forEach(mision => {
+                const misionElemento = document.createElement('div');
+                misionElemento.classList.add('item');
+                misionElemento.innerHTML = `
+                    <h4>${mision.nombre}</h4>
+                    <p>Progreso: ${mision.progreso}/${mision.objetivo}</p>
+                    <p>Recompensa: ${mision.recompensa} XP</p>
+                    <p>Tipo: ${mision.tipo}</p>
+                `;
+                listaMisiones.appendChild(misionElemento);
+            });
+        }
+
+        function actualizarMisiones(tipo) {
+            const misiones = [...misionesDiarias, ...misionesSemanales];
+            misiones.forEach(mision => {
+                if (!mision.completada && mision.nombre.includes(tipo)) {
+                    mision.progreso++;
+                    if (mision.progreso >= mision.objetivo) {
+                        mision.completada = true;
+                        alert(`¡Has completado la misión: ${mision.nombre}!`);
+                        actualizarExperiencia(mision.recompensa);
+                    }
+                }
+            });
+        }
+
+        // Funciones de Logros
+        function verificarLogros() {
+            logros.forEach(logro => {
+                if (!logro.obtenido) {
+                    if (logro.id === 1 && puntos >= 1) {
+                        logro.obtenido = true;
+                        alert(`¡Has conseguido el logro: ${logro.nombre}!`);
+                        inventario.avatares.push('Avatar Especial');
+                    }
+                    if (logro.id === 2 && pokeballs >= 10) {
+                        logro.obtenido = true;
+                        alert(`¡Has conseguido el logro: ${logro.nombre}!`);
+                        inventario.skins.push('Skin Especial');
+                    }
+                    // Agrega más condiciones para otros logros
+                }
+            });
+        }
+
+        function cargarLogros() {
+            const listaLogros = document.getElementById('lista-logros');
+            listaLogros.innerHTML = '';
+
+            logros.forEach(logro => {
+                const logroElemento = document.createElement('div');
+                logroElemento.classList.add('item');
+                logroElemento.innerHTML = `
+                    <h4>${logro.nombre}</h4>
+                    <p>${logro.descripcion}</p>
+                    <p>Estado: ${logro.obtenido ? 'Obtenido' : 'No obtenido'}</p>
+                `;
+                listaLogros.appendChild(logroElemento);
+            });
+        }
+
+        // Funciones de la Tienda
+        function comprarItem(tipo) {
+            let costo = 0;
+            let item = '';
+            if (tipo === 'avatar') {
+                costo = 100;
+                item = `Avatar ${Math.floor(Math.random() * 100)}`;
+            } else if (tipo === 'skin') {
+                costo = 200;
+                item = `Skin ${Math.floor(Math.random() * 100)}`;
+            } else if (tipo === 'pokemon') {
+                costo = 300;
+                item = `Pokémon ${Math.floor(Math.random() * 100)}`;
+            }
+
+            if (monedas >= costo) {
+                monedas -= costo;
+                alert(`¡Has comprado: ${item}!`);
+                if (tipo === 'avatar') {
+                    inventario.avatares.push(item);
+                } else if (tipo === 'skin') {
+                    inventario.skins.push(item);
+                } else if (tipo === 'pokemon') {
+                    inventario.pokemon.push(item);
+                }
+                actualizarMonedas();
+            } else {
+                alert('No tienes suficientes monedas.');
+            }
+        }
+
+        function actualizarMonedas() {
+            document.getElementById('monedas').innerText = `Monedas: ${monedas}`;
+        }
+
+        // Funciones de la Taquilla
+        function cargarTaquilla() {
+            const listaAvatares = document.getElementById('lista-avatares');
+            listaAvatares.innerHTML = '';
+            inventario.avatares.forEach(avatar => {
+                const avatarElemento = document.createElement('div');
+                avatarElemento.classList.add('item');
+                avatarElemento.innerHTML = `<p>${avatar}</p>`;
+                listaAvatares.appendChild(avatarElemento);
+            });
+
+            const listaSkins = document.getElementById('lista-skins');
+            listaSkins.innerHTML = '';
+            inventario.skins.forEach(skin => {
+                const skinElemento = document.createElement('div');
+                skinElemento.classList.add('item');
+                skinElemento.innerHTML = `<p>${skin}</p>`;
+                listaSkins.appendChild(skinElemento);
+            });
+
+            const listaPokemon = document.getElementById('lista-pokemon');
+            listaPokemon.innerHTML = '';
+            inventario.pokemon.forEach(pokemon => {
+                const pokemonElemento = document.createElement('div');
+                pokemonElemento.classList.add('item');
+                pokemonElemento.innerHTML = `<p>${pokemon}</p>`;
+                listaPokemon.appendChild(pokemonElemento);
+            });
+        }
+
+        // Eventos de carga de secciones
+        document.getElementById('logros').addEventListener('click', cargarLogros);
+        document.getElementById('misiones').addEventListener('click', cargarMisiones);
+        document.getElementById('taquilla').addEventListener('click', cargarTaquilla);
+        document.getElementById('tienda').addEventListener('click', actualizarMonedas);
+        document.getElementById('pase-batalla').addEventListener('click', () => {
+            document.getElementById('experiencia-pase').innerText = `Experiencia: ${experienciaPase}/100`;
+            document.getElementById('nivel-pase').innerText = `Nivel: ${nivelPase}`;
+        });
+
+        // Inicializar el juego
+        mostrarSeccion('menu-principal');
+    </script>
+</body>
+</html>
