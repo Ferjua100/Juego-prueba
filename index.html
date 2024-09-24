@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Juego de Captura y Batalla</title>
+    <title>Juego de Captura y Batalla Mejorado</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -22,13 +22,13 @@
             border: 2px solid #388e3c;
         }
         .criatura {
-            width: 40px;
-            height: 40px;
-            background-color: #ffcc80;
-            border-radius: 50%;
+            width: 50px;
+            height: 50px;
             position: absolute;
             cursor: pointer;
-            border: 2px solid #fb8c00;
+            border: 2px solid #000;
+            border-radius: 5px;
+            background-size: cover;
         }
         #batalla {
             display: none;
@@ -47,29 +47,60 @@
         }
         .criatura-inventario {
             display: inline-block;
-            width: 40px;
-            height: 40px;
-            background-color: #ffcc80;
-            border-radius: 50%;
+            width: 50px;
+            height: 50px;
             margin: 5px;
-            border: 2px solid #fb8c00;
+            border: 2px solid #000;
+            cursor: pointer;
+            position: relative;
+            border-radius: 5px;
+            background-size: cover;
+        }
+        .salud {
+            position: absolute;
+            bottom: -30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #000;
+        }
+        .nivel {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #000;
+        }
+        #objetos {
+            margin-top: 20px;
+        }
+        #objetos button {
+            margin: 5px;
         }
     </style>
 </head>
 <body>
     <div id="game">
-        <h1>¡Captura y Batalla!</h1>
+        <h1>¡Captura y Batalla Mejorado!</h1>
         <div id="mapa"></div>
         <button onclick="iniciarBatalla()">Iniciar Batalla</button>
         <div id="batalla">
             <h2>Batalla</h2>
             <p id="textoBatalla"></p>
             <button onclick="atacar()">Atacar</button>
+            <button onclick="usarObjeto()">Usar Objeto</button>
         </div>
         <div id="sorpresa">🎉 ¡Has descubierto una criatura legendaria! 🎉</div>
         <div id="inventario">
             <h3>Tus Criaturas:</h3>
             <div id="listaCriaturas"></div>
+        </div>
+        <div id="objetos">
+            <h3>Objetos:</h3>
+            <button onclick="usarPocion()">Poción (x<span id="cantidadPociones">3</span>)</button>
         </div>
     </div>
 
@@ -77,17 +108,35 @@
         let criaturas = [];
         let criaturasCapturadas = [];
         let criaturaEnemiga = null;
+        let criaturaJugador = null;
+        let cantidadPociones = 3;
+
+        const tipos = ["Fuego", "Agua", "Planta"];
+        const ventajas = {
+            "Fuego": "Planta",
+            "Agua": "Fuego",
+            "Planta": "Agua"
+        };
+
+        const imagenesCriaturas = {
+            "Fuego": "https://i.imgur.com/3KcGD6n.png",  // Imagen de ejemplo para tipo Fuego
+            "Agua": "https://i.imgur.com/hWnFrAu.png",   // Imagen de ejemplo para tipo Agua
+            "Planta": "https://i.imgur.com/Zf1N5Ex.png"  // Imagen de ejemplo para tipo Planta
+        };
 
         function posicionAleatoria() {
-            const x = Math.floor(Math.random() * 760);
-            const y = Math.floor(Math.random() * 360);
+            const x = Math.floor(Math.random() * 750);
+            const y = Math.floor(Math.random() * 350);
             return { x, y };
         }
 
         function generarCriaturas() {
             for (let i = 0; i < 5; i++) {
+                const tipo = tipos[Math.floor(Math.random() * tipos.length)];
                 const div = document.createElement('div');
                 div.classList.add('criatura');
+                div.dataset.tipo = tipo;
+                div.style.backgroundImage = `url('${imagenesCriaturas[tipo]}')`;
                 const pos = posicionAleatoria();
                 div.style.left = pos.x + 'px';
                 div.style.top = pos.y + 'px';
@@ -101,22 +150,55 @@
 
         function capturarCriatura(criaturaDiv) {
             criaturaDiv.remove();
-            criaturasCapturadas.push(criaturaDiv);
+            // Asignamos propiedades a la criatura capturada
+            const criatura = {
+                nombre: generarNombre(),
+                tipo: criaturaDiv.dataset.tipo,
+                salud: 100,
+                nivel: 1,
+                experiencia: 0,
+                experienciaNecesaria: 50,
+                imagen: criaturaDiv.style.backgroundImage
+            };
+            criaturasCapturadas.push(criatura);
             actualizarInventario();
-            alert('¡Has capturado una criatura!');
+            alert('¡Has capturado a ' + criatura.nombre + ' de tipo ' + criatura.tipo + '!');
             if (criaturasCapturadas.length === 3) {
                 document.getElementById('sorpresa').style.display = 'block';
             }
         }
 
+        function generarNombre() {
+            const nombres = ["Fuegozard", "Aguamon", "Plantín", "Electrobit", "Rocarroca", "Vientoid"];
+            return nombres[Math.floor(Math.random() * nombres.length)];
+        }
+
         function actualizarInventario() {
             const inventario = document.getElementById('listaCriaturas');
             inventario.innerHTML = '';
-            criaturasCapturadas.forEach(() => {
+            criaturasCapturadas.forEach((criatura, index) => {
                 const div = document.createElement('div');
                 div.classList.add('criatura-inventario');
+                div.onclick = function() {
+                    seleccionarCriatura(index);
+                }
+                div.style.backgroundImage = criatura.imagen;
+                const nivelDiv = document.createElement('div');
+                nivelDiv.classList.add('nivel');
+                nivelDiv.innerText = 'Nv: ' + criatura.nivel;
+                div.appendChild(nivelDiv);
+                const saludDiv = document.createElement('div');
+                saludDiv.classList.add('salud');
+                saludDiv.innerText = 'Salud: ' + criatura.salud;
+                div.appendChild(saludDiv);
                 inventario.appendChild(div);
             });
+            document.getElementById('cantidadPociones').innerText = cantidadPociones;
+        }
+
+        function seleccionarCriatura(index) {
+            criaturaJugador = criaturasCapturadas[index];
+            alert('Has seleccionado a ' + criaturaJugador.nombre + ' para la batalla.');
         }
 
         function iniciarBatalla() {
@@ -124,20 +206,95 @@
                 alert('¡No tienes criaturas para luchar!');
                 return;
             }
+            if (!criaturaJugador) {
+                alert('Selecciona una criatura de tu inventario para luchar.');
+                return;
+            }
             document.getElementById('batalla').style.display = 'block';
-            criaturaEnemiga = { salud: 100 };
-            document.getElementById('textoBatalla').innerText = '¡Un enemigo apareció! Salud: ' + criaturaEnemiga.salud;
+            const tipoEnemigo = tipos[Math.floor(Math.random() * tipos.length)];
+            criaturaEnemiga = {
+                nombre: generarNombre(),
+                tipo: tipoEnemigo,
+                salud: 100,
+                imagen: `url('${imagenesCriaturas[tipoEnemigo]}')`
+            };
+            document.getElementById('textoBatalla').innerText = '¡Un ' + criaturaEnemiga.nombre + ' enemigo apareció! Tipo: ' + criaturaEnemiga.tipo + '. Salud: ' + criaturaEnemiga.salud;
+        }
+
+        function calcularDaño(atacante, defensor) {
+            let daño = Math.floor(Math.random() * 20) + 10;
+            if (ventajas[atacante.tipo] === defensor.tipo) {
+                daño *= 1.5;  // Ventaja de tipo
+            }
+            return Math.floor(daño);
         }
 
         function atacar() {
-            const daño = Math.floor(Math.random() * 20) + 10;
-            criaturaEnemiga.salud -= daño;
+            // Daño del jugador al enemigo
+            let dañoJugador = calcularDaño(criaturaJugador, criaturaEnemiga);
+            criaturaEnemiga.salud -= dañoJugador;
+
+            let mensaje = 'Tu ' + criaturaJugador.nombre + ' hizo ' + dañoJugador + ' de daño a ' + criaturaEnemiga.nombre + '. Salud del enemigo: ' + criaturaEnemiga.salud + '. ';
+
             if (criaturaEnemiga.salud <= 0) {
-                document.getElementById('textoBatalla').innerText = '¡Has derrotado al enemigo!';
+                mensaje += '¡Has derrotado al enemigo!';
                 document.getElementById('batalla').style.display = 'none';
+                ganarExperiencia(criaturaJugador, 50);
+                criaturaEnemiga = null;
             } else {
-                document.getElementById('textoBatalla').innerText = 'Has hecho ' + daño + ' de daño. Salud del enemigo: ' + criaturaEnemiga.salud;
+                // Daño del enemigo al jugador
+                let dañoEnemigo = calcularDaño(criaturaEnemiga, criaturaJugador);
+                criaturaJugador.salud -= dañoEnemigo;
+                mensaje += 'El enemigo te ha hecho ' + dañoEnemigo + ' de daño. Salud de tu criatura: ' + criaturaJugador.salud + '.';
+
+                if (criaturaJugador.salud <= 0) {
+                    mensaje += ' ¡Tu criatura ha sido derrotada!';
+                    document.getElementById('batalla').style.display = 'none';
+                    // Remover la criatura derrotada del inventario
+                    const index = criaturasCapturadas.indexOf(criaturaJugador);
+                    if (index > -1) {
+                        criaturasCapturadas.splice(index, 1);
+                        criaturaJugador = null;
+                        actualizarInventario();
+                    }
+                }
             }
+
+            document.getElementById('textoBatalla').innerText = mensaje;
+            actualizarInventario();
+        }
+
+        function ganarExperiencia(criatura, exp) {
+            criatura.experiencia += exp;
+            if (criatura.experiencia >= criatura.experienciaNecesaria) {
+                criatura.nivel += 1;
+                criatura.salud = 100;
+                criatura.experiencia = 0;
+                criatura.experienciaNecesaria *= 1.5;
+                alert('¡Tu criatura ha subido al nivel ' + criatura.nivel + '!');
+            }
+        }
+
+        function usarPocion() {
+            if (!criaturaJugador) {
+                alert('Selecciona una criatura para curar.');
+                return;
+            }
+            if (cantidadPociones <= 0) {
+                alert('No tienes pociones disponibles.');
+                return;
+            }
+            criaturaJugador.salud += 50;
+            if (criaturaJugador.salud > 100) {
+                criaturaJugador.salud = 100;
+            }
+            cantidadPociones -= 1;
+            alert('Has usado una poción en ' + criaturaJugador.nombre + '. Salud actual: ' + criaturaJugador.salud);
+            actualizarInventario();
+        }
+
+        function usarObjeto() {
+            usarPocion();
         }
 
         generarCriaturas();
